@@ -1,0 +1,11 @@
+{
+  "identifier": "rentadomain",
+  "name": "rentadomain.sh",
+  "version": "1.0.0",
+  "author": "rentadomain.sh",
+  "description": "Rent a domain by the month, never sold. Search the listed names, see each term and its total, and start a rent your person approves.",
+  "homepage": "https://rentadomain.sh/for-agents",
+  "cloudEndpoint": "https://rentadomain.sh/mcp",
+  "category": "developer",
+  "tags": ["domains", "domain rental", "dns", "agents"]
+}
