@@ -1,11 +1,1028 @@
 {
   "identifier": "rentadomain",
   "name": "rentadomain.sh",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "rentadomain.sh",
   "description": "Rent a domain by the month, never sold. Search the listed names, see each term and its total, and start a rent your person approves.",
   "homepage": "https://rentadomain.sh/for-agents",
   "cloudEndpoint": "https://rentadomain.sh/mcp",
   "category": "developer",
-  "tags": ["domains", "domain rental", "dns", "agents"]
+  "tags": [
+    "domains",
+    "domain rental",
+    "dns",
+    "agents"
+  ],
+  "tools": [
+    {
+      "name": "search_names",
+      "title": "Search listed names",
+      "description": "Lists the domain names rentadomain.sh has for rent right now, each with its monthly price and term menu; call it first, or whenever the user wants a domain and has not named one. Pass the user's own words as the query: names are matched on their host and keywords and ranked by how many words they match, and a miss returns the names closest in spelling.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "description": "The person's words for the name they want (a sentence works) or a piece of a host; empty or absent lists every name.",
+            "type": "string",
+            "maxLength": 64
+          },
+          "limit": {
+            "default": 20,
+            "description": "How many names to return, 1 to 50.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "monthly_cents": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "monthly": {
+                  "type": "string"
+                },
+                "term_menu": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "months": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "monthly_cents": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "monthly": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "months",
+                      "monthly_cents",
+                      "monthly"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "url": {
+                  "type": "string"
+                },
+                "rent_url": {
+                  "type": "string"
+                },
+                "matched": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "host",
+                "monthly_cents",
+                "monthly",
+                "term_menu",
+                "url",
+                "rent_url",
+                "matched"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "closest": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "monthly_cents": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "monthly": {
+                  "type": "string"
+                },
+                "term_menu": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "months": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "monthly_cents": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "monthly": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "months",
+                      "monthly_cents",
+                      "monthly"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "url": {
+                  "type": "string"
+                },
+                "rent_url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "host",
+                "monthly_cents",
+                "monthly",
+                "term_menu",
+                "url",
+                "rent_url"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "closest_why": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "query",
+          "total",
+          "names",
+          "closest",
+          "closest_why"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Search listed names",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "ui": {
+          "resourceUri": "ui://rentadomain/rent-card-v1.html"
+        },
+        "ui/resourceUri": "ui://rentadomain/rent-card-v1.html",
+        "openai/outputTemplate": "ui://rentadomain/rent-card-v1.html",
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "get_name",
+      "title": "Get one name",
+      "description": "Looks up one domain name on rentadomain.sh: listed, rented or not held, the monthly price for 12, 6 and 1 month terms, the renewal floor and ceiling, the appraisal and the rent URL; call it when the user names a specific domain.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "The domain name as the user gave it: a URL or a bare host both work."
+          }
+        },
+        "required": [
+          "host"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "listed",
+              "rented",
+              "not_listed"
+            ]
+          },
+          "monthly_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "monthly": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "term_menu": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "months": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "monthly_cents": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "monthly": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "months",
+                    "monthly_cents",
+                    "monthly"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "floor_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ceiling_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "renewal_formula": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "appraisal": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "available_on": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rent_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "host",
+          "status",
+          "monthly_cents",
+          "monthly",
+          "term_menu",
+          "floor_cents",
+          "ceiling_cents",
+          "renewal_formula",
+          "appraisal",
+          "available_on",
+          "url",
+          "rent_url",
+          "next_step"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Get one name",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "ui": {
+          "resourceUri": "ui://rentadomain/rent-card-v1.html"
+        },
+        "ui/resourceUri": "ui://rentadomain/rent-card-v1.html",
+        "openai/outputTemplate": "ui://rentadomain/rent-card-v1.html",
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "get_lease_terms",
+      "title": "Get the lease terms",
+      "description": "Returns the exact lease text for one name and term, its version and sha256, and the never-sell guarantee in one sentence; call it before the human rents, so they read what they sign.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "The domain name as the user gave it: a URL or a bare host both work."
+          },
+          "term_months": {
+            "default": 12,
+            "description": "The term: 12, 6 or 1 month. The 12 month rate is the listed rate; shorter terms cost more per month.",
+            "type": "number",
+            "enum": [
+              12,
+              6,
+              1
+            ]
+          }
+        },
+        "required": [
+          "host"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "listed",
+              "rented",
+              "not_listed"
+            ]
+          },
+          "term_months": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "monthly_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "monthly": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "terms_version": {
+            "type": "string"
+          },
+          "terms_sha256": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "never_sell": {
+            "type": "string"
+          },
+          "terms_text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "host",
+          "status",
+          "term_months",
+          "monthly_cents",
+          "monthly",
+          "terms_version",
+          "terms_sha256",
+          "never_sell",
+          "terms_text",
+          "next_step"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Get the lease terms",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "how_to_rent",
+      "title": "How to rent",
+      "description": "Returns the exact steps for this agent and its human to rent a name and point its DNS, with every URL; call it once the user has picked a name.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "The domain name as the user gave it: a URL or a bare host both work."
+          },
+          "client": {
+            "description": "The agent platform or client, free text, so the steps can name it.",
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "n": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "actor": {
+                  "type": "string",
+                  "enum": [
+                    "agent",
+                    "human"
+                  ]
+                },
+                "action": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "n",
+                "actor",
+                "action",
+                "url"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "rent_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "manage_api": {
+            "type": "object",
+            "properties": {
+              "openapi": {
+                "type": "string"
+              },
+              "llms_txt": {
+                "type": "string"
+              },
+              "for_agents": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "openapi",
+              "llms_txt",
+              "for_agents"
+            ],
+            "additionalProperties": false
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "host",
+          "steps",
+          "rent_url",
+          "manage_api",
+          "note"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "How to rent",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "start_rent",
+      "title": "Start a rent",
+      "description": "Starts renting one listed name for a term (12, 6 or 1 month) and returns an approval_url for the human to open: they sign in (an email code, then a passkey or authenticator app), pass the identity check, sign the lease and pay by card, and the fixed-term lease starts on payment with no refunds after activation; names are rented for business or other commercial use only. Call it once the user has chosen the name and term. A rented or unheld name answers taken or not_listed with listed alternatives; a mandate (pre-authorized agent rent) is not available yet.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "The domain name as the user gave it: a URL or a bare host both work."
+          },
+          "term_months": {
+            "default": 12,
+            "description": "The term: 12, 6 or 1 month. The 12 month rate is the listed rate; shorter terms cost more per month.",
+            "type": "number",
+            "enum": [
+              12,
+              6,
+              1
+            ]
+          },
+          "client": {
+            "description": "The agent platform or client, free text, recorded on the intent.",
+            "type": "string",
+            "maxLength": 64
+          },
+          "mandate": {
+            "description": "A pre-authorization from the human for an agent-completed rent. Not available yet: the answer is mandate_unavailable and approval_url still works.",
+            "type": "object",
+            "properties": {
+              "max_monthly_cents": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "description": "The most per month the human pre-authorized, in cents."
+              },
+              "max_term_months": {
+                "type": "number",
+                "enum": [
+                  12,
+                  6,
+                  1
+                ],
+                "description": "The longest term the human pre-authorized: 12, 6 or 1 month."
+              },
+              "authorization_ref": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "description": "The id of the authorization the human recorded."
+              }
+            },
+            "required": [
+              "max_monthly_cents",
+              "max_term_months",
+              "authorization_ref"
+            ]
+          }
+        },
+        "required": [
+          "host"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "intent_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "host": {
+            "type": "string"
+          },
+          "term_months": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "monthly_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "monthly": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "mandate_unavailable",
+              "taken",
+              "not_listed"
+            ]
+          },
+          "approval_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "alternatives": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "monthly_cents": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "monthly": {
+                  "type": "string"
+                },
+                "term_menu": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "months": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "monthly_cents": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "monthly": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "months",
+                      "monthly_cents",
+                      "monthly"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "url": {
+                  "type": "string"
+                },
+                "rent_url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "host",
+                "monthly_cents",
+                "monthly",
+                "term_menu",
+                "url",
+                "rent_url"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "intent_id",
+          "host",
+          "term_months",
+          "monthly_cents",
+          "monthly",
+          "status",
+          "approval_url",
+          "expires_at",
+          "alternatives",
+          "next_step"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Start a rent",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "get_rent_status",
+      "title": "Get a rent status",
+      "description": "Reports where a rent started by start_rent stands: waiting (the human has not opened approval_url), signing, active (with the lease and its dashboard URL), failed, expired, or taken (someone else rented the name first). Poll it after handing over approval_url.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "intent_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "The intent_id start_rent returned."
+          }
+        },
+        "required": [
+          "intent_id"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "intent_id": {
+            "type": "string"
+          },
+          "host": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "signing",
+              "active",
+              "failed",
+              "expired",
+              "taken",
+              "unknown"
+            ]
+          },
+          "origin": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lease": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "lease_id": {
+                    "type": "string"
+                  },
+                  "host": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "starts_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "ends_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "term_months": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "monthly_cents": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "monthly": {
+                    "type": "string"
+                  },
+                  "dashboard_url": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "lease_id",
+                  "host",
+                  "status",
+                  "starts_at",
+                  "ends_at",
+                  "term_months",
+                  "monthly_cents",
+                  "monthly",
+                  "dashboard_url"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "intent_id",
+          "host",
+          "status",
+          "origin",
+          "lease",
+          "reason",
+          "next_step"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Get a rent status",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          }
+        ]
+      }
+    }
+  ],
+  "resources": [
+    {
+      "name": "lease-terms",
+      "title": "Lease template",
+      "uri": "rentadomain://terms",
+      "description": "The lease every renter signs, rendered for example.com at the lowest listed rate. The real price and bounds for a name come from get_lease_terms.",
+      "mimeType": "text/plain"
+    },
+    {
+      "name": "rent-card",
+      "title": "Rent card",
+      "uri": "ui://rentadomain/rent-card-v1.html",
+      "description": "The card a chat shows for a name search or one name: each term with its monthly rent and total, the billing facts and a Rent button.",
+      "mimeType": "text/html;profile=mcp-app"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "rent-a-domain",
+      "title": "Rent a domain",
+      "description": "Walks the model through finding a name, reading its lease and handing the rent URL to the human.",
+      "arguments": [
+        {
+          "name": "host",
+          "description": "The domain name the user wants, if they named one.",
+          "required": false
+        }
+      ]
+    }
+  ]
 }
